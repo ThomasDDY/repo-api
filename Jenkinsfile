@@ -12,7 +12,10 @@ pipeline {
 
         stage('Start Podman VM') {
             steps {
-                bat 'podman machine start'
+                bat '''
+                    podman machine init
+                    podman machine start
+                '''
             }
         }
 
