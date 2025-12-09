@@ -10,6 +10,12 @@ pipeline {
             steps { checkout scm }
         }
 
+        stage('Test Podman') {
+            steps {
+                bat 'podman info'
+            }
+        }
+
         stage('Start Podman VM') {
             steps {
                 bat 'podman machine start'
