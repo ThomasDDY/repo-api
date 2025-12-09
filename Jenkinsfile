@@ -10,20 +10,20 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                bat 'npm install'
             }
         }
 
         stage('Build Container Image') {
             steps {
-                sh 'podman build -t repo-api .'
+                bat 'podman build -t repo-api .'
             }
         }
 
         stage('Run Container') {
             steps {
-                sh '''
-                    podman rm -f repo-api || true
+                bat '''
+                    podman rm -f repo-api
                     podman run -d -p 3000:3000 --name repo-api repo-api
                 '''
             }
