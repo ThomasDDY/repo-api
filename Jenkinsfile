@@ -16,11 +16,22 @@ pipeline {
             }
         }
 
-        // stage('Start Podman VM') {
-        //     steps {
-        //         bat 'podman machine start'
-        //     }
-        // }
+        stage('Start Podman VM') {
+            steps {
+                bat '''
+                    FOR /F "tokens=*" %%i IN ('podman machine list --format "{{.Running}}"') DO SET RUNNING=%%i
+
+                    echo Podman running state: %RUNNING%
+
+                    IF "%RUNNING%"=="true" (
+                        echo Podman VM already running. Skipping start...
+                    ) ELSE (
+                        echo Starting Podman VM...
+                        podman machine start
+                    )
+                '''
+            }
+        }
 
         stage('Install Dependencies') {
             steps { bat 'npm install' }
