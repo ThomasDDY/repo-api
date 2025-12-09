@@ -16,11 +16,11 @@ pipeline {
             }
         }
 
-        stage('Start Podman VM') {
-            steps {
-                bat 'podman machine start'
-            }
-        }
+        // stage('Start Podman VM') {
+        //     steps {
+        //         bat 'podman machine start'
+        //     }
+        // }
 
         stage('Install Dependencies') {
             steps { bat 'npm install' }
