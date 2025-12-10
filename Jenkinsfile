@@ -37,6 +37,12 @@ pipeline {
             steps { bat 'npm install' }
         }
 
+        stage('Run Tests') {
+            steps {
+                bat 'npm test'
+            }
+        }
+
         stage('Build Container Image') {
             steps { bat 'podman build -t repo-api .' }
         }
