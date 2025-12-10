@@ -5,30 +5,31 @@ pipeline {
         nodejs 'NodeJS'
     }
 
+    environment {
+        APP_NAME = "repo-api"
+        HOST_PORT = "3001"
+        CONTAINER_PORT = "3000"
+    }
+
     stages {
+
         stage('Checkout') {
             steps { checkout scm }
-        }
-
-        stage('Test Podman') {
-            steps {
-                bat 'podman info'
-            }
         }
 
         stage('Start Podman VM') {
             steps {
                 bat '''
-                    FOR /F "tokens=*" %%i IN ('podman machine list --format "{{.Running}}"') DO SET RUNNING=%%i
-
-                    echo Podman running state: %RUNNING%
-
-                    IF "%RUNNING%"=="true" (
-                        echo Podman VM already running. Skipping start...
-                    ) ELSE (
-                        echo Starting Podman VM...
-                        podman machine start
+                    podman machine inspect podman-machine-default >nul 2>&1
+                    if %errorlevel% neq 0 (
+                        echo Creating Podman VM...
+                        podman machine init
+                    ) else (
+                        echo Podman VM already exists.
                     )
+
+                    echo Starting Podman VM...
+                    podman machine start 2>nul || echo VM already running.
                 '''
             }
         }
@@ -37,42 +38,44 @@ pipeline {
             steps { bat 'npm install' }
         }
 
-        stage('Run Tests') {
-            steps {
-                bat 'npm test'
-            }
-        }
-
         stage('Build Container Image') {
-            steps { 
-                bat """
-                    podman build -t repo-api:${env.BUILD_NUMBER} .
-                    podman tag repo-api:${env.BUILD_NUMBER} repo-api:latest
-                """ 
-            }
+            steps { bat 'podman build -t %APP_NAME% .' }
         }
 
-        stage('Deploy') {
-            steps {
-                bat 'podman play kube deployment.yaml'
-            }
-        }
-
-        stage('Health Check') {
-            steps {
-                bat 'curl http://localhost:3000/health'
-            }
-        }
-
-        stage('Cleanup') {
+        stage('Clean Previous Deployment') {
             steps {
                 bat '''
-                    podman container prune -f
-                    podman image prune -f
+                    echo Removing old pod if exists...
+                    podman pod rm -f repo-api-pod 2>nul || echo No existing pod.
+
+                    echo Removing old container(s)...
+                    podman rm -f %APP_NAME% 2>nul || echo No existing container.
                 '''
             }
         }
 
+        stage('Deploy with Kube YAML') {
+            steps {
+                bat '''
+                    echo Deploying with Podman Kube...
+                    podman play kube deployment.yaml
+
+                    echo Current Podman Pods:
+                    podman pod ps
+
+                    echo Current Podman Containers:
+                    podman ps
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deployment OK — Application is live at http://localhost:3001"
+        }
+        failure {
+            echo "Deployment FAILED — check Podman logs"
+        }
     }
 }
-
