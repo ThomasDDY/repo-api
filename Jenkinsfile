@@ -31,6 +31,8 @@ pipeline {
                     ) ELSE (
                         FOR /F "tokens=2" %%i IN ("%INFO%") DO SET RUNNING=%%i
 
+                        echo Podman running state: %RUNNING%
+
                         IF "%RUNNING%"=="true" (
                             echo Podman VM is already running. Skipping start...
                         ) ELSE (
