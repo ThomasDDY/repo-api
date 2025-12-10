@@ -21,6 +21,7 @@ pipeline {
             steps {
                 bat '''
                     FOR /F "tokens=*" %%i IN ('podman machine list --format "{{.Name}} {{.Running}}"') DO SET INFO=%%i
+                    FOR /F "tokens=2" %%i IN ('podman machine list --format "{{.Name}} {{.Running}}"') DO SET RUNNING=%%i
 
                     echo Podman info: %INFO%
 
@@ -29,11 +30,9 @@ pipeline {
                         podman machine init
                         podman machine start
                     ) ELSE (
-                        FOR /F "tokens=2" %%i IN ("%INFO%") DO SET RUNNING=%%i
-
                         echo Podman running state: %RUNNING%
 
-                        IF "%RUNNING%" (
+                        IF "%RUNNING%"=="true" (
                             echo Podman VM is already running. Skipping start...
                         ) ELSE (
                             echo Starting Podman VM...
