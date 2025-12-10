@@ -54,7 +54,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                bat 'podman-compose up -d'
+                bat 'podman play kube deployment.yaml'
             }
         }
 
