@@ -16,3 +16,5 @@ res.json({ status: "healthy" });
 
 
 app.listen(port, () => console.log(`API running on port ${port}`));
+
+app.get("/health", (req, res) => res.json({ status: "OK" }));

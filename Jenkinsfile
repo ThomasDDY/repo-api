@@ -44,17 +44,35 @@ pipeline {
         }
 
         stage('Build Container Image') {
-            steps { bat 'podman build -t repo-api .' }
+            steps { 
+                bat """
+                    podman build -t repo-api:${env.BUILD_NUMBER} .
+                    podman tag repo-api:${env.BUILD_NUMBER} repo-api:latest
+                """ 
+            }
         }
 
-        stage('Run Container') {
+        stage('Deploy') {
+            steps {
+                bat 'podman-compose up -d'
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                bat 'curl http://localhost:3000/health'
+            }
+        }
+
+        stage('Cleanup') {
             steps {
                 bat '''
-                    podman rm -f repo-api || exit 0
-                    podman run -d -p 3000:3000 --name repo-api repo-api
+                    podman container prune -f
+                    podman image prune -f
                 '''
             }
         }
+
     }
 }
 
