@@ -20,16 +20,24 @@ pipeline {
         stage('Start Podman VM') {
             steps {
                 bat '''
-                    podman machine inspect podman-machine-default >nul 2>&1
-                    if %errorlevel% neq 0 (
-                        echo Creating Podman VM...
-                        podman machine init
-                    ) else (
-                        echo Podman VM already exists.
-                    )
+                    FOR /F "tokens=*" %%i IN ('podman machine list --format "{{.Name}} {{.Running}}"') DO SET INFO=%%i
 
-                    echo Starting Podman VM...
-                    podman machine start 2>nul || echo VM already running.
+                    echo Podman info: %INFO%
+
+                    IF "%INFO%"=="" (
+                        echo No Podman VM found. Creating...
+                        podman machine init
+                        podman machine start
+                    ) ELSE (
+                        FOR /F "tokens=2" %%i IN ("%INFO%") DO SET RUNNING=%%i
+
+                        IF "%RUNNING%"=="true" (
+                            echo Podman VM is already running. Skipping start...
+                        ) ELSE (
+                            echo Starting Podman VM...
+                            podman machine start
+                        )
+                    )
                 '''
             }
         }
