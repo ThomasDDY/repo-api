@@ -33,7 +33,7 @@ pipeline {
 
                         echo Podman running state: %RUNNING%
 
-                        IF "%RUNNING%"=="true" (
+                        IF "%RUNNING%" (
                             echo Podman VM is already running. Skipping start...
                         ) ELSE (
                             echo Starting Podman VM...
